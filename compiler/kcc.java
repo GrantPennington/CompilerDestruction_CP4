@@ -2,12 +2,12 @@ package compiler;
 
 import java.io.IOException;
 //ANTLR packages
+import lexparse.*; //classes for lexer parser
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.tree.*;
 import org.antlr.v4.gui.Trees;
-import lexparse.*; //classes for lexer parser
 
 public class kcc{
     public static void main(String[] args){
