@@ -1,5 +1,5 @@
 <?xml version = "1.0"?>
-<project name="KnightCode Skeleton" default="info" basedir="/home/cs322/CompProject_4/KnightCodeSkeleton">
+<project name="KnightCode Skeleton" default="info" basedir="/home/cs322/CompilerDestruction_CP4/">
 	
 	<target name="info">
 
