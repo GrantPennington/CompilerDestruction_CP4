@@ -203,12 +203,37 @@ public class myListener extends KnightCodeBaseListener{
         System.out.println("Exit set var rule. . .");
     }
 
+    public void enterRead(KnightCodeParser.ReadContext ctx){
+        String var = ctx.getChild(1).getText();
+        System.out.println("READ CONTEXT: "+var);
+        varTable.get(var).setAddress(7);
+        // Initialize the Scanner class
+        mainVisitor.visitTypeInsn(Opcodes.NEW, "java/util/Scanner");
+        mainVisitor.visitInsn(Opcodes.DUP);
+        mainVisitor.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "in", "Ljava/io/InputStream;");
+        mainVisitor.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/util/Scanner", "<init>", "(Ljava/io/InputStream;)V", false);
+        mainVisitor.visitVarInsn(Opcodes.ASTORE, 1); //store scanner
+        mainVisitor.visitVarInsn(Opcodes.ALOAD, 1); //load scanner
+        mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/util/Scanner", "nextInt", "()I", false); //invoke scanner
+        mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(var).getAddress());
+        // ONLY WORKS FOR READING INTEGERS RIGHT NOW
+        // STILL NEED TO FIGURE OUT HOW TO GET STRINGS
+    }
+    public void exitRead(KnightCodeParser.ReadContext ctx){}
+
     public void enterPrint(KnightCodeParser.PrintContext ctx){
         String output = ctx.getChild(1).getText();
-
-
-		mainVisitor.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-        mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(output).getAddress());
-		//mainVisitor.visitLdcInsn(varTable.get(output).value);
-		mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream",  "println", "(I)V", false);    }
+        // if the printcontext is a key in the varTable, print a integer value
+        // else print the string
+        // STILL NEED TO CHECK IF THE VARIABLE IN THE TABLE IS A STRING OR NOT
+        if(varTable.keySet().contains(output)){ 
+		    mainVisitor.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+            mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(output).getAddress());
+		    mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream",  "println", "(I)V", false);
+        } else {
+            mainVisitor.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+            mainVisitor.visitLdcInsn(output.substring(1, output.length()-1)); //substring to remove the " "
+		    mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream",  "println", "(Ljava/lang/String;)V", false);
+        }
+    }
 } //end class
