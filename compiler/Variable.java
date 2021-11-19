@@ -1,24 +1,35 @@
 package compiler;
 
-public class Variable<T>{
+public class Variable{
     // Variable class for the datatype and value of each declared variable
 
     String datatype; // datatype
-    T value = null; // generic value
+    String value = null; // generic value
+    int address = 0;
 
     public Variable(String type){
         // constructor
         datatype = type;
     }
 
-    public void setValue(T val){
+    public void setValue(String val){
         // setter for generic value
         value = val;
     }
 
-    public T getValue(){
+    public String getValue(){
         // getter for generic value
         return value;
+    }
+
+    public void setAddress(int addy){
+        // setter for generic value
+        address = addy;
+    }
+
+    public int getAddress(){
+        // getter for generic value
+        return address;
     }
 
     public void show(){
