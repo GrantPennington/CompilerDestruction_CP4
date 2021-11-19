@@ -105,13 +105,63 @@ public class myListener extends KnightCodeBaseListener{
 
     public void enterAddition(KnightCodeParser.AdditionContext ctx){
         System.out.println("ENTER ADDITION");
-        System.out.println(ctx.getText());
-        /*
-            add ASM code to do addition
-        */
+        System.out.println(ctx.getChild(0).getText());
+        
+        for(int i = 0; i < ctx.getText().length(); i++){
+            String currentVar = ctx.getChild(i).getText();
+            if(!currentVar.equals("+")){
+                int val = Integer.parseInt(varTable.get(currentVar).value);
+                mainVisitor.visitIntInsn(Opcodes.BIPUSH, val);
+                mainVisitor.visitVarInsn(Opcodes.ISTORE, i+1);
+                varTable.get(currentVar).setAddress(i+1);
+            }
+        }
+        //get the variable/key that the addition belongs to
+        String current = ""; // variable to hold the variable key
+        for(String key : varTable.keySet()){
+            if(varTable.get(key).getValue().equals(ctx.getText())){
+                current = key;
+                varTable.get(key).setAddress(5);
+            }
+        }
+        mainVisitor.visitVarInsn(Opcodes.ILOAD, 1);
+        mainVisitor.visitVarInsn(Opcodes.ILOAD, 3);
+        mainVisitor.visitInsn(Opcodes.IADD);
+        mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(current).getAddress()); // store the value of x+y in address of variable        
     }
 
     public void exitAddition(KnightCodeParser.AdditionContext ctx){}
+
+    public void enterSubtraction(KnightCodeParser.SubtractionContext ctx){
+        System.out.println("ENTER SUBTRACTION");
+        System.out.println(ctx.getChild(0).getText());
+        
+        for(int i = 0; i < ctx.getText().length(); i++){
+            String currentVar = ctx.getChild(i).getText();
+            if(!currentVar.equals("-")){
+                int val = Integer.parseInt(varTable.get(currentVar).value);
+                mainVisitor.visitIntInsn(Opcodes.BIPUSH, val);
+                mainVisitor.visitVarInsn(Opcodes.ISTORE, i+1);
+                varTable.get(currentVar).setAddress(i+1);
+            }
+        }
+        //get the variable/key that the addition belongs to
+        String current = ""; // variable to hold the variable key
+        for(String key : varTable.keySet()){
+            if(varTable.get(key).getValue().equals(ctx.getText())){
+                current = key;
+                varTable.get(key).setAddress(5);
+            }
+        }
+        mainVisitor.visitVarInsn(Opcodes.ILOAD, 1);
+        mainVisitor.visitVarInsn(Opcodes.ILOAD, 3);
+        mainVisitor.visitInsn(Opcodes.ISUB);
+        mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(current).getAddress()); // store the value of x+y in address of variable        
+    }
+
+    public void exitSubtraction(KnightCodeParser.SubtractionContext ctx){
+
+    }
 
     public void enterVariable(KnightCodeParser.VariableContext ctx) { 
         System.out.println("Enter variable rule");
@@ -146,36 +196,19 @@ public class myListener extends KnightCodeBaseListener{
         
         // update the value of the Variable object using the setter method
         // cast the value to the proper type i.e. Integer or String
-        if(varTable.get(key).datatype == "INTEGER"){
-            varTable.get(key).setValue(Integer.parseInt(value));
-        } else {
-            varTable.get(key).setValue(value);
-        }
+        varTable.get(key).setValue(value);
     }
 
     public void exitSetvar(KnightCodeParser.SetvarContext ctx){
         System.out.println("Exit set var rule. . .");
     }
 
-    public void enterStat(KnightCodeParser.StatContext ctx){
-        System.out.println("Enter stat rule");
-        System.out.println(ctx.getText());
-    }
-
-    public void exitStat(KnightCodeParser.StatContext ctx){
-        System.out.println("exit stat rule");
-    }
-
     public void enterPrint(KnightCodeParser.PrintContext ctx){
-        System.out.println("Print: "+ctx.getText());
-    }
+        String output = ctx.getChild(1).getText();
 
-	/**
-	 * Prints context string. Used for debugging purposes
-	 * @param ctx
-	 */
-	private void printContext(String ctx){
-		System.out.println(ctx);
-	}
 
+		mainVisitor.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+        mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(output).getAddress());
+		//mainVisitor.visitLdcInsn(varTable.get(output).value);
+		mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream",  "println", "(I)V", false);    }
 } //end class
