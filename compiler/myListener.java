@@ -110,10 +110,14 @@ public class myListener extends KnightCodeBaseListener{
         for(int i = 0; i < ctx.getText().length(); i++){
             String currentVar = ctx.getChild(i).getText();
             if(!currentVar.equals("+")){
-                int val = Integer.parseInt(varTable.get(currentVar).value);
-                mainVisitor.visitIntInsn(Opcodes.BIPUSH, val);
-                mainVisitor.visitVarInsn(Opcodes.ISTORE, i+1);
-                varTable.get(currentVar).setAddress(i+1);
+                try{
+                    int val = Integer.parseInt(varTable.get(currentVar).value);
+                    mainVisitor.visitIntInsn(Opcodes.BIPUSH, val);
+                    mainVisitor.visitVarInsn(Opcodes.ISTORE, i+1);
+                    varTable.get(currentVar).setAddress(i+1);
+                } catch(Exception e) {
+                    return; // return nothing from this method if there is an exception
+                }
             }
         }
         //get the variable/key that the addition belongs to
@@ -136,13 +140,57 @@ public class myListener extends KnightCodeBaseListener{
         System.out.println("ENTER SUBTRACTION");
         System.out.println(ctx.getChild(0).getText());
         
+        // to solve the most recent error ive ran into, I am adding this code to grab the value from the hasmap, that is being evaluated/parsed to an integer,
+        // to check if it is an integer or a string before evaluating
+            for(int i = 0; i < ctx.getText().length(); i++){
+                String currentVar = ctx.getChild(i).getText();
+                if(!currentVar.equals("-")){
+                    try{
+                        int val = Integer.parseInt(varTable.get(currentVar).value);
+                        mainVisitor.visitIntInsn(Opcodes.BIPUSH, val);
+                        mainVisitor.visitVarInsn(Opcodes.ISTORE, i+1);
+                        varTable.get(currentVar).setAddress(i+1);
+                    } catch(Exception e) {
+                        return; // return nothing from this method if there is an exception
+                    }
+                }
+            }
+            // get the variable/key that the subtraction belongs to
+            // i.e. z = x-y, we evaluated x-y -> 5-2 = 7, now we have 7, and we need to know where we got it from
+            // so I search the HashMap looking for the key that has the value pair of x-y
+            // this is so I can store the address of where the value 7 is stored, in the HashMap
+            String current = ""; // variable to hold the variable key
+            for(String key : varTable.keySet()){
+                if(varTable.get(key).getValue().equals(ctx.getText())){
+                    current = key;
+                    varTable.get(key).setAddress(5);
+                }
+            }
+            mainVisitor.visitVarInsn(Opcodes.ILOAD, 1);
+            mainVisitor.visitVarInsn(Opcodes.ILOAD, 3);
+            mainVisitor.visitInsn(Opcodes.ISUB);
+            mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(current).getAddress()); // store the value of x+y in address of variable    
+    }
+
+    public void exitSubtraction(KnightCodeParser.SubtractionContext ctx){
+
+    }
+
+    public void enterMultiplication(KnightCodeParser.MultiplicationContext ctx){
+        System.out.println("ENTER MULTIPLICATION");
+        System.out.println(ctx.getChild(0).getText());
+        
         for(int i = 0; i < ctx.getText().length(); i++){
             String currentVar = ctx.getChild(i).getText();
-            if(!currentVar.equals("-")){
-                int val = Integer.parseInt(varTable.get(currentVar).value);
-                mainVisitor.visitIntInsn(Opcodes.BIPUSH, val);
-                mainVisitor.visitVarInsn(Opcodes.ISTORE, i+1);
-                varTable.get(currentVar).setAddress(i+1);
+            if(!currentVar.equals("*")){
+                try{
+                    int val = Integer.parseInt(varTable.get(currentVar).value);
+                    mainVisitor.visitIntInsn(Opcodes.BIPUSH, val);
+                    mainVisitor.visitVarInsn(Opcodes.ISTORE, i+1);
+                    varTable.get(currentVar).setAddress(i+1);
+                } catch(Exception e) {
+                    return; // return nothing from this method if there is an exception
+                }
             }
         }
         //get the variable/key that the addition belongs to
@@ -155,12 +203,45 @@ public class myListener extends KnightCodeBaseListener{
         }
         mainVisitor.visitVarInsn(Opcodes.ILOAD, 1);
         mainVisitor.visitVarInsn(Opcodes.ILOAD, 3);
-        mainVisitor.visitInsn(Opcodes.ISUB);
-        mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(current).getAddress()); // store the value of x+y in address of variable        
+        mainVisitor.visitInsn(Opcodes.IMUL);
+        mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(current).getAddress()); // store the value in address of variable        
     }
 
-    public void exitSubtraction(KnightCodeParser.SubtractionContext ctx){
+    public void exitMultiplication(KnightCodeParser.MultiplicationContext ctx){
+    }
 
+    public void enterDivision(KnightCodeParser.DivisionContext ctx){
+        System.out.println("ENTER Division");
+        System.out.println(ctx.getChild(0).getText());
+        
+        for(int i = 0; i < ctx.getText().length(); i++){
+            String currentVar = ctx.getChild(i).getText();
+            if(!currentVar.equals("/")){
+                try{
+                    int val = Integer.parseInt(varTable.get(currentVar).value);
+                    mainVisitor.visitIntInsn(Opcodes.BIPUSH, val);
+                    mainVisitor.visitVarInsn(Opcodes.ISTORE, i+1);
+                    varTable.get(currentVar).setAddress(i+1);
+                } catch(Exception e) {
+                    return; // return nothing from this method if there is an exception
+                }
+            }
+        }
+        //get the variable/key that the addition belongs to
+        String current = ""; // variable to hold the variable key
+        for(String key : varTable.keySet()){
+            if(varTable.get(key).getValue().equals(ctx.getText())){
+                current = key;
+                varTable.get(key).setAddress(5);
+            }
+        }
+        mainVisitor.visitVarInsn(Opcodes.ILOAD, 1);
+        mainVisitor.visitVarInsn(Opcodes.ILOAD, 3);
+        mainVisitor.visitInsn(Opcodes.IDIV);
+        mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(current).getAddress()); // store the value in address of variable        
+    }
+
+    public void exitDivision(KnightCodeParser.DivisionContext ctx){
     }
 
     public void enterVariable(KnightCodeParser.VariableContext ctx) { 
@@ -197,6 +278,7 @@ public class myListener extends KnightCodeBaseListener{
         // update the value of the Variable object using the setter method
         // cast the value to the proper type i.e. Integer or String
         varTable.get(key).setValue(value);
+        System.out.println(varTable.get(key));
     }
 
     public void exitSetvar(KnightCodeParser.SetvarContext ctx){
@@ -212,14 +294,22 @@ public class myListener extends KnightCodeBaseListener{
         mainVisitor.visitInsn(Opcodes.DUP);
         mainVisitor.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "in", "Ljava/io/InputStream;");
         mainVisitor.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/util/Scanner", "<init>", "(Ljava/io/InputStream;)V", false);
-        mainVisitor.visitVarInsn(Opcodes.ASTORE, 1); //store scanner
-        mainVisitor.visitVarInsn(Opcodes.ALOAD, 1); //load scanner
+        mainVisitor.visitVarInsn(Opcodes.ASTORE, 9); //store scanner
+        mainVisitor.visitVarInsn(Opcodes.ALOAD, 9); //load scanner
         mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/util/Scanner", "nextInt", "()I", false); //invoke scanner
         mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(var).getAddress());
         // ONLY WORKS FOR READING INTEGERS RIGHT NOW
         // STILL NEED TO FIGURE OUT HOW TO GET STRINGS
     }
+    
     public void exitRead(KnightCodeParser.ReadContext ctx){}
+
+    public void enterLoop(KnightCodeParser.LoopContext ctx) {
+        System.out.println("ENTER THAT LOOOOP");
+        System.out.println(ctx.getText());
+    }
+
+    public void exitLoop(KnightCodeParser.LoopContext ctx) {}
 
     public void enterPrint(KnightCodeParser.PrintContext ctx){
         String output = ctx.getChild(1).getText();
