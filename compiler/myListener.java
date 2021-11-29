@@ -5,7 +5,8 @@ import java.util.HashMap;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-
+import org.objectweb.asm.Label;
+import java.util.regex.*;
 import lexparse.*;
 
 public class myListener extends KnightCodeBaseListener{
@@ -244,6 +245,13 @@ public class myListener extends KnightCodeBaseListener{
     public void exitDivision(KnightCodeParser.DivisionContext ctx){
     }
 
+    public void enterComp(KnightCodeParser.CompContext ctx) {
+        System.out.println("COMP CONTEXT");
+        System.out.println(ctx.getText());
+    }
+
+    public void exitComp(KnightCodeParser.CompContext ctx) {}
+
     public void enterVariable(KnightCodeParser.VariableContext ctx) { 
         System.out.println("Enter variable rule");
 
@@ -307,6 +315,50 @@ public class myListener extends KnightCodeBaseListener{
     public void enterLoop(KnightCodeParser.LoopContext ctx) {
         System.out.println("ENTER THAT LOOOOP");
         System.out.println(ctx.getText());
+        String context = ctx.getText();
+
+        // get the comparison string
+        String comp = context.substring(context.indexOf('E')+1, context.indexOf('D'));
+        System.out.println(comp);
+        String compSymb = comp.substring(1,2);
+
+        Label label0 = new Label();
+        mainVisitor.visitLabel(label0);
+        mainVisitor.visitInsn(Opcodes.ICONST_0);
+        mainVisitor.visitVarInsn(Opcodes.ISTORE, 1);
+        Label label1 = new Label();
+        mainVisitor.visitLabel(label1);
+        Label label2 = new Label();
+        mainVisitor.visitJumpInsn(Opcodes.GOTO, label2);
+        // remove label 3 after test
+        Label label3 = new Label();
+        mainVisitor.visitLabel(label3);
+        mainVisitor.visitFrame(Opcodes.F_APPEND,1, new Object[] {Opcodes.INTEGER}, 0, null);
+        mainVisitor.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+        mainVisitor.visitVarInsn(Opcodes.ILOAD, 1);
+        mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println", "(I)V", false);
+        Label label4 = new Label();
+        mainVisitor.visitLabel(label4);
+        mainVisitor.visitIincInsn(1, 4);
+        mainVisitor.visitLabel(label2);
+        mainVisitor.visitVarInsn(Opcodes.ILOAD, 1);
+        mainVisitor.visitInsn(Opcodes.ICONST_5);
+
+        if(compSymb.equals("<")){
+            mainVisitor.visitJumpInsn(Opcodes.IF_ICMPLT, label3);
+        }
+        else if(compSymb.equals(">")){
+            mainVisitor.visitJumpInsn(Opcodes.IF_ICMPGT, label3);
+        }
+        else if(compSymb.equals(":=")){
+            mainVisitor.visitJumpInsn(Opcodes.IF_ICMPEQ, label3);
+        }
+        else if(compSymb.equals("<>")){
+            mainVisitor.visitJumpInsn(Opcodes.IF_ICMPNE, label3);
+        }
+        Label label7 = new Label();
+        mainVisitor.visitLabel(label7);
+        //mainVisitor.visitInsn(Opcodes.RETURN);
     }
 
     public void exitLoop(KnightCodeParser.LoopContext ctx) {}
