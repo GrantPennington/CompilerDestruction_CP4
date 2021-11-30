@@ -4,12 +4,13 @@ public class Variable{
     // Variable class for the datatype and value of each declared variable
 
     String datatype; // datatype
-    String value = null; // generic value
-    int address = 0;
+    String value = ""; // generic value
+    int index = 0;
 
-    public Variable(String type){
+    public Variable(String type, int ind){
         // constructor
         datatype = type;
+        index = ind;
     }
 
     public void setValue(String val){
@@ -22,22 +23,17 @@ public class Variable{
         return value;
     }
 
-    public void setAddress(int addy){
+    public void setIndex(int ind){
         // setter for generic value
-        address = addy;
+        index = ind;
     }
 
-    public int getAddress(){
+    public int getIndex(){
         // getter for generic value
-        return address;
-    }
-
-    public void show(){
-        System.out.println(datatype+" -> "+value);
+        return index;
     }
 
     public String toString(){
-        // toString method
-        return datatype+", "+value;
+        return "type -> "+datatype+", value -> "+value+", index - > "+index;
     }
 }
