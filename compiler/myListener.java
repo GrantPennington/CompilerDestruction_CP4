@@ -13,6 +13,7 @@ public class myListener extends KnightCodeBaseListener{
     private ClassWriter cw;  //ASM ClassWriter 
 	private MethodVisitor mainVisitor; //ASM MethodVisitor
 	private String programName; //name of the .class output file
+    private int globalIndex = 0;
 
     HashMap<String, Variable> varTable = new HashMap<String, Variable>(); //hash map of type String and class Variable to store the declared variables
 
@@ -106,106 +107,116 @@ public class myListener extends KnightCodeBaseListener{
 
     public void enterAddition(KnightCodeParser.AdditionContext ctx){
         System.out.println("ENTER ADDITION");
-        System.out.println(ctx.getChild(0).getText());
-        
-        for(int i = 0; i < ctx.getText().length(); i++){
-            String currentVar = ctx.getChild(i).getText();
-            if(!currentVar.equals("+")){
-                try{
-                    int val = Integer.parseInt(varTable.get(currentVar).value);
-                    mainVisitor.visitIntInsn(Opcodes.BIPUSH, val);
-                    mainVisitor.visitVarInsn(Opcodes.ISTORE, i+1);
-                    varTable.get(currentVar).setAddress(i+1);
-                } catch(Exception e) {
-                    return; // return nothing from this method if there is an exception
-                }
-            }
-        }
-        //get the variable/key that the addition belongs to
+        String v1 = ctx.getChild(0).getText(); // get the first variable before the operand
+        String v2 = ctx.getChild(2).getText(); // get the variable after the operand
+
+        // since when the listener enters the subtraction rule, the only string given is, for example, y+10
+        // I need to know what variable is being SET with the value, y+10
+        // So this loop searches the HashMap keySet to see if the value y+10 is a value for a key in the HashMap
+        // and then saves it to a variable called current
         String current = ""; // variable to hold the variable key
-        for(String key : varTable.keySet()){
-            if(varTable.get(key).getValue().equals(ctx.getText())){
-                current = key;
-                varTable.get(key).setAddress(5);
+            for(String key : varTable.keySet()){
+                if(varTable.get(key).value.equals(ctx.getText())){
+                    current = key;
             }
         }
-        mainVisitor.visitVarInsn(Opcodes.ILOAD, 1);
-        mainVisitor.visitVarInsn(Opcodes.ILOAD, 3);
+        // checking to see if String v1 is a key in the Hashmap
+        if(varTable.keySet().contains(v1)){
+            mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(v1).index);
+            System.out.println(varTable.get(v1).value);
+        } 
+        else {
+            mainVisitor.visitVarInsn(Opcodes.BIPUSH, Integer.parseInt(v1));
+        }
+        // checking to see if String v2 is a key in the Hashmap
+        if(varTable.keySet().contains(v2)){
+            mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(v2).index);
+        }
+        else {
+            mainVisitor.visitVarInsn(Opcodes.BIPUSH, Integer.parseInt(v2));
+        }
+
         mainVisitor.visitInsn(Opcodes.IADD);
-        mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(current).getAddress()); // store the value of x+y in address of variable        
+        mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(current).index); // store the subtracted value into the address/index of the current HashMap key       
     }
 
     public void exitAddition(KnightCodeParser.AdditionContext ctx){}
 
     public void enterSubtraction(KnightCodeParser.SubtractionContext ctx){
         System.out.println("ENTER SUBTRACTION");
-        System.out.println(ctx.getChild(0).getText());
-        
-        // to solve the most recent error ive ran into, I am adding this code to grab the value from the hasmap, that is being evaluated/parsed to an integer,
-        // to check if it is an integer or a string before evaluating
-            for(int i = 0; i < ctx.getText().length(); i++){
-                String currentVar = ctx.getChild(i).getText();
-                if(!currentVar.equals("-")){
-                    try{
-                        int val = Integer.parseInt(varTable.get(currentVar).value);
-                        mainVisitor.visitIntInsn(Opcodes.BIPUSH, val);
-                        mainVisitor.visitVarInsn(Opcodes.ISTORE, i+1);
-                        varTable.get(currentVar).setAddress(i+1);
-                    } catch(Exception e) {
-                        return; // return nothing from this method if there is an exception
-                    }
-                }
-            }
-            // get the variable/key that the subtraction belongs to
-            // i.e. z = x-y, we evaluated x-y -> 5-2 = 7, now we have 7, and we need to know where we got it from
-            // so I search the HashMap looking for the key that has the value pair of x-y
-            // this is so I can store the address of where the value 7 is stored, in the HashMap
-            String current = ""; // variable to hold the variable key
+        String v1 = ctx.getChild(0).getText(); // get the first variable before the operand
+        String v2 = ctx.getChild(2).getText(); // get the variable after the operand
+
+        // since when the listener enters the subtraction rule, the only string given is, for example, y-10
+        // I need to know what variable is being SET with the value, y-10
+        // So this loop searches the HashMap keySet to see if the value y-10 is a value for a key in the HashMap
+        // and then saves it to a variable called current
+        String current = ""; // variable to hold the variable key
             for(String key : varTable.keySet()){
-                if(varTable.get(key).getValue().equals(ctx.getText())){
+                if(varTable.get(key).value.equals(ctx.getText())){
                     current = key;
-                    varTable.get(key).setAddress(5);
-                }
             }
-            mainVisitor.visitVarInsn(Opcodes.ILOAD, 1);
-            mainVisitor.visitVarInsn(Opcodes.ILOAD, 3);
-            mainVisitor.visitInsn(Opcodes.ISUB);
-            mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(current).getAddress()); // store the value of x+y in address of variable    
+        }
+        // checking to see if String v1 is a key in the Hashmap
+        if(varTable.keySet().contains(v1)){
+            mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(v1).index);
+            System.out.println(varTable.get(v1).value);
+        } 
+        else {
+            mainVisitor.visitVarInsn(Opcodes.BIPUSH, Integer.parseInt(v1));
+        }
+        // checking to see if String v2 is a key in the Hashmap
+        if(varTable.keySet().contains(v2)){
+            mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(v2).index);
+        }
+        else {
+            mainVisitor.visitVarInsn(Opcodes.BIPUSH, Integer.parseInt(v2));
+        }
+
+        mainVisitor.visitInsn(Opcodes.ISUB);
+        mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(current).index); // store the subtracted value into the address/index of the current HashMap key     
     }
 
-    public void exitSubtraction(KnightCodeParser.SubtractionContext ctx){
-
-    }
+    public void exitSubtraction(KnightCodeParser.SubtractionContext ctx){}
 
     public void enterMultiplication(KnightCodeParser.MultiplicationContext ctx){
+        /*
+            FOR SOME REASON MULTIPLY IS THE ONLY ONE NOT WORKING PROPERLY
+            I did 2*2 and got 25 ???
+            No idea whats going on there but ill come back to it
+        */
         System.out.println("ENTER MULTIPLICATION");
-        System.out.println(ctx.getChild(0).getText());
-        
-        for(int i = 0; i < ctx.getText().length(); i++){
-            String currentVar = ctx.getChild(i).getText();
-            if(!currentVar.equals("*")){
-                try{
-                    int val = Integer.parseInt(varTable.get(currentVar).value);
-                    mainVisitor.visitIntInsn(Opcodes.BIPUSH, val);
-                    mainVisitor.visitVarInsn(Opcodes.ISTORE, i+1);
-                    varTable.get(currentVar).setAddress(i+1);
-                } catch(Exception e) {
-                    return; // return nothing from this method if there is an exception
-                }
-            }
-        }
-        //get the variable/key that the addition belongs to
+        String v1 = ctx.getChild(0).getText(); // get the first variable before the operand
+        String v2 = ctx.getChild(2).getText(); // get the variable after the operand
+
+        // since when the listener enters the subtraction rule, the only string given is, for example, y*10
+        // I need to know what variable is being SET with the value, y*10
+        // So this loop searches the HashMap keySet to see if the value y*10 is a value for a key in the HashMap
+        // and then saves it to a variable called current
         String current = ""; // variable to hold the variable key
-        for(String key : varTable.keySet()){
-            if(varTable.get(key).getValue().equals(ctx.getText())){
-                current = key;
-                varTable.get(key).setAddress(5);
+            for(String key : varTable.keySet()){
+                if(varTable.get(key).value.equals(ctx.getText())){
+                    current = key;
             }
         }
-        mainVisitor.visitVarInsn(Opcodes.ILOAD, 1);
-        mainVisitor.visitVarInsn(Opcodes.ILOAD, 3);
+        // checking to see if String v1 is a key in the Hashmap
+        if(varTable.keySet().contains(v1)){
+            mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(v1).index);
+            System.out.println(varTable.get(v1).value);
+        } 
+        else {
+            mainVisitor.visitVarInsn(Opcodes.BIPUSH, Integer.parseInt(v1));
+        }
+        // checking to see if String v2 is a key in the Hashmap
+        if(varTable.keySet().contains(v2)){
+            mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(v2).index);
+        }
+        else {
+            mainVisitor.visitVarInsn(Opcodes.BIPUSH, Integer.parseInt(v2));
+        }
+
         mainVisitor.visitInsn(Opcodes.IMUL);
-        mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(current).getAddress()); // store the value in address of variable        
+        mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(current).index); // store the subtracted value into the address/index of the current HashMap key
     }
 
     public void exitMultiplication(KnightCodeParser.MultiplicationContext ctx){
@@ -213,33 +224,37 @@ public class myListener extends KnightCodeBaseListener{
 
     public void enterDivision(KnightCodeParser.DivisionContext ctx){
         System.out.println("ENTER Division");
-        System.out.println(ctx.getChild(0).getText());
-        
-        for(int i = 0; i < ctx.getText().length(); i++){
-            String currentVar = ctx.getChild(i).getText();
-            if(!currentVar.equals("/")){
-                try{
-                    int val = Integer.parseInt(varTable.get(currentVar).value);
-                    mainVisitor.visitIntInsn(Opcodes.BIPUSH, val);
-                    mainVisitor.visitVarInsn(Opcodes.ISTORE, i+1);
-                    varTable.get(currentVar).setAddress(i+1);
-                } catch(Exception e) {
-                    return; // return nothing from this method if there is an exception
-                }
-            }
-        }
-        //get the variable/key that the addition belongs to
+        String v1 = ctx.getChild(0).getText(); // get the first variable before the operand
+        String v2 = ctx.getChild(2).getText(); // get the variable after the operand
+
+        // since when the listener enters the subtraction rule, the only string given is, for example, y/10
+        // I need to know what variable is being SET with the value, y/10
+        // So this loop searches the HashMap keySet to see if the value y/10 is a value for a key in the HashMap
+        // and then saves it to a variable called current
         String current = ""; // variable to hold the variable key
-        for(String key : varTable.keySet()){
-            if(varTable.get(key).getValue().equals(ctx.getText())){
-                current = key;
-                varTable.get(key).setAddress(5);
+            for(String key : varTable.keySet()){
+                if(varTable.get(key).value.equals(ctx.getText())){
+                    current = key;
             }
         }
-        mainVisitor.visitVarInsn(Opcodes.ILOAD, 1);
-        mainVisitor.visitVarInsn(Opcodes.ILOAD, 3);
+        // checking to see if String v1 is a key in the Hashmap
+        if(varTable.keySet().contains(v1)){
+            mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(v1).index);
+            System.out.println(varTable.get(v1).value);
+        } 
+        else {
+            mainVisitor.visitVarInsn(Opcodes.BIPUSH, Integer.parseInt(v1));
+        }
+        // checking to see if String v2 is a key in the Hashmap
+        if(varTable.keySet().contains(v2)){
+            mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(v2).index);
+        }
+        else {
+            mainVisitor.visitVarInsn(Opcodes.BIPUSH, Integer.parseInt(v2));
+        }
+
         mainVisitor.visitInsn(Opcodes.IDIV);
-        mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(current).getAddress()); // store the value in address of variable        
+        mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(current).index); // store the subtracted value into the address/index of the current HashMap key        
     }
 
     public void exitDivision(KnightCodeParser.DivisionContext ctx){
@@ -254,20 +269,12 @@ public class myListener extends KnightCodeBaseListener{
 
     public void enterVariable(KnightCodeParser.VariableContext ctx) { 
         System.out.println("Enter variable rule");
+        System.out.println("VAR: "+ctx.getChild(0).getText());
+        String varType = ctx.getChild(0).getText(); // string variable to hold varType
+        String identifier = ctx.getChild(1).getText(); // string to hold the identifier
+        varTable.put(identifier, new Variable(varType, globalIndex));
+        globalIndex += 1;
 
-        String varType = ""; // string variable to hold varType
-        String identifier = ""; // string to hold the identifier
-        for(int i = 0; i < ctx.getText().length(); i++){
-            // for loop that iterates over the ctx.getText()
-            // this loop pulls out the datatype and identifier and assigns them
-            if(!Character.isLowerCase(ctx.getText().charAt(i))){
-                varType += ctx.getText().charAt(i);
-            }
-            else {
-                identifier = ""+ctx.getText().charAt(i);
-            }
-        }
-        varTable.put(identifier, new Variable(varType)); // store the values gotten from the for loop into the hash map
         // print statements
         System.out.println("ID: "+identifier+" TYPE: "+varType);
         System.out.println(varTable.get(identifier).toString());
@@ -279,14 +286,36 @@ public class myListener extends KnightCodeBaseListener{
 
     public void enterSetvar(KnightCodeParser.SetvarContext ctx){
         System.out.println("Enter set var rule");
-        
-        String key = ctx.getText().substring(ctx.getText().indexOf('T')+1, ctx.getText().indexOf(':')); //substring to extract key value from SET statement
-        String value = ctx.getText().substring(ctx.getText().indexOf('=')+1); // substring to extract value from SET statement
-        
-        // update the value of the Variable object using the setter method
-        // cast the value to the proper type i.e. Integer or String
-        varTable.get(key).setValue(value);
-        System.out.println(varTable.get(key));
+        // since our set var statement is defined as SET (identifier) := (value)
+        // I can grab ctx.getChild(1) as the identifier
+        // and ctx.getChild(3) as the value
+        // ctx.getChild(0) -> "SET", ctx.getChild(2) -> ":="
+        String ident = ctx.getChild(1).getText();
+        String value = ctx.getChild(3).getText();
+        System.out.println(ctx.getChild(3).getText());
+
+        // If we have SET x := y-10 for example
+        // These IF statements check to see if either y or 10 is a key in the hashmap
+        // If either one is a key in the HashMap, then we get the value, parse the value to an Integer, then push it to the stack and store
+        // it in the index
+        if(varTable.keySet().contains(value)){
+            varTable.get(ident).setValue(varTable.get(value).value);
+            mainVisitor.visitVarInsn(Opcodes.BIPUSH, Integer.parseInt(varTable.get(ident).value));
+            mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(ident).index);
+        }
+        else {
+            try{
+                varTable.get(ident).setValue(value);
+                mainVisitor.visitVarInsn(Opcodes.BIPUSH, Integer.parseInt(varTable.get(ident).value));
+                mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(ident).index);
+            } catch (Exception e) {
+                // This try catch block was the best solution I could come up with, I ran into errors when trying to parse to an integer
+                // if the setVar value was something like x-10
+                // So, I just return nothing if there is an error caught
+                // and the listener will continue on to the operation rule (i.e. addition)
+                return ;
+            }
+        }
     }
 
     public void exitSetvar(KnightCodeParser.SetvarContext ctx){
@@ -296,7 +325,7 @@ public class myListener extends KnightCodeBaseListener{
     public void enterRead(KnightCodeParser.ReadContext ctx){
         String var = ctx.getChild(1).getText();
         System.out.println("READ CONTEXT: "+var);
-        varTable.get(var).setAddress(7);
+        varTable.get(var).setIndex(7);
         // Initialize the Scanner class
         mainVisitor.visitTypeInsn(Opcodes.NEW, "java/util/Scanner");
         mainVisitor.visitInsn(Opcodes.DUP);
@@ -305,7 +334,8 @@ public class myListener extends KnightCodeBaseListener{
         mainVisitor.visitVarInsn(Opcodes.ASTORE, 9); //store scanner
         mainVisitor.visitVarInsn(Opcodes.ALOAD, 9); //load scanner
         mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/util/Scanner", "nextInt", "()I", false); //invoke scanner
-        mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(var).getAddress());
+        mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(var).index);
+        //System.out.println("X ADDRESS: "+varTable.get(var).address);
         // ONLY WORKS FOR READING INTEGERS RIGHT NOW
         // STILL NEED TO FIGURE OUT HOW TO GET STRINGS
     }
@@ -321,29 +351,52 @@ public class myListener extends KnightCodeBaseListener{
         String comp = context.substring(context.indexOf('E')+1, context.indexOf('D'));
         System.out.println(comp);
         String compSymb = comp.substring(1,2);
-
-        Label label0 = new Label();
-        mainVisitor.visitLabel(label0);
-        mainVisitor.visitInsn(Opcodes.ICONST_0);
-        mainVisitor.visitVarInsn(Opcodes.ISTORE, 1);
-        Label label1 = new Label();
-        mainVisitor.visitLabel(label1);
-        Label label2 = new Label();
-        mainVisitor.visitJumpInsn(Opcodes.GOTO, label2);
-        // remove label 3 after test
-        Label label3 = new Label();
-        mainVisitor.visitLabel(label3);
-        mainVisitor.visitFrame(Opcodes.F_APPEND,1, new Object[] {Opcodes.INTEGER}, 0, null);
-        mainVisitor.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-        mainVisitor.visitVarInsn(Opcodes.ILOAD, 1);
-        mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println", "(I)V", false);
-        Label label4 = new Label();
-        mainVisitor.visitLabel(label4);
-        mainVisitor.visitIincInsn(1, 4);
-        mainVisitor.visitLabel(label2);
-        mainVisitor.visitVarInsn(Opcodes.ILOAD, 1);
-        mainVisitor.visitInsn(Opcodes.ICONST_5);
-
+        String varValue = varTable.get(ctx.getChild(1).getText()).value;
+        int cond = Integer.parseInt(ctx.getChild(3).getText());
+        //int var = 0;
+        //var = Integer.parseInt(varValue);
+            System.out.println("VAR: "+varValue);
+            Label label0 = new Label();
+            mainVisitor.visitLabel(label0);
+            //mainVisitor.visitLineNumber(8, label0);
+            //mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(varValue).address);
+            //mainVisitor.visitIntInsn(Opcodes.BIPUSH, cond);
+            mainVisitor.visitInsn(Opcodes.ICONST_0);
+            mainVisitor.visitVarInsn(Opcodes.ISTORE, 1);
+            Label label1 = new Label();
+            mainVisitor.visitLabel(label1);
+            //mainVisitor.visitLineNumber(9, label1);
+            Label label2 = new Label();
+            mainVisitor.visitJumpInsn(Opcodes.GOTO, label2);
+            Label label3 = new Label();
+            mainVisitor.visitLabel(label3);
+            //mainVisitor.visitLineNumber(10, label3);
+            //mainVisitor.visitFrame(Opcodes.F_APPEND,1, new Object[] {Opcodes.INTEGER}, 0, null);
+            mainVisitor.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+            mainVisitor.visitVarInsn(Opcodes.ILOAD, 1);
+            mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(ctx.getChild(1).getText()).index);
+            mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println", "(I)V", false);
+            Label label4 = new Label();
+            mainVisitor.visitLabel(label4);
+            mainVisitor.visitLineNumber(11, label4);
+            mainVisitor.visitIincInsn(1, 1);
+            mainVisitor.visitLabel(label2);
+            mainVisitor.visitLineNumber(9, label2);
+            mainVisitor.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
+            mainVisitor.visitVarInsn(Opcodes.ILOAD, 1);
+            mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(ctx.getChild(1).getText()).index);
+            //mainVisitor.visitIntInsn(Opcodes.BIPUSH, var);
+            //mainVisitor.visitIntInsn(Opcodes.BIPUSH, var);
+            mainVisitor.visitInsn(Opcodes.ICONST_5);
+            mainVisitor.visitJumpInsn(Opcodes.IF_ICMPGT, label3);
+            Label label7 = new Label();
+            mainVisitor.visitLabel(label7);
+            mainVisitor.visitLineNumber(15, label7);
+            mainVisitor.visitInsn(Opcodes.RETURN);
+            //System.out.println(cond);
+            //int var = Integer.parseInt(varTable.get(varValue).value);
+            
+        /*
         if(compSymb.equals("<")){
             mainVisitor.visitJumpInsn(Opcodes.IF_ICMPLT, label3);
         }
@@ -356,9 +409,11 @@ public class myListener extends KnightCodeBaseListener{
         else if(compSymb.equals("<>")){
             mainVisitor.visitJumpInsn(Opcodes.IF_ICMPNE, label3);
         }
+        /*
         Label label7 = new Label();
         mainVisitor.visitLabel(label7);
         //mainVisitor.visitInsn(Opcodes.RETURN);
+        */
     }
 
     public void exitLoop(KnightCodeParser.LoopContext ctx) {}
@@ -368,9 +423,9 @@ public class myListener extends KnightCodeBaseListener{
         // if the printcontext is a key in the varTable, print a integer value
         // else print the string
         // STILL NEED TO CHECK IF THE VARIABLE IN THE TABLE IS A STRING OR NOT
-        if(varTable.keySet().contains(output)){ 
+        if(varTable.keySet().contains(output)){
 		    mainVisitor.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-            mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(output).getAddress());
+            mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(output).index);
 		    mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream",  "println", "(I)V", false);
         } else {
             mainVisitor.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
