@@ -293,6 +293,12 @@ public class myListener extends KnightCodeBaseListener{
         String value = ctx.getChild(3).getText();
         System.out.println(ctx.getChild(3).getText());
 
+        // if statement for setting a String variable
+        if(varTable.get(ident).datatype.equals("STRING")){
+            mainVisitor.visitLdcInsn(value);
+            mainVisitor.visitVarInsn(Opcodes.ASTORE, varTable.get(ident).index);
+        }
+        // If statement for setting an Integer variable
         // If we have SET x := y-10 for example
         // These IF statements check to see if either y or 10 is a key in the hashmap
         // If either one is a key in the HashMap, then we get the value, parse the value to an Integer, then push it to the stack and store
@@ -332,12 +338,12 @@ public class myListener extends KnightCodeBaseListener{
         mainVisitor.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/util/Scanner", "<init>", "(Ljava/io/InputStream;)V", false);
         mainVisitor.visitVarInsn(Opcodes.ASTORE, 9); //store scanner
         mainVisitor.visitVarInsn(Opcodes.ALOAD, 9); //load scanner
-        try{
-            mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/util/Scanner", "nextInt", "()I", false); //invoke scanner
-            mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(var).index);
-        } catch (Exception e) {
+        if(varTable.get(var).datatype.equals("STRING")){
             mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/util/Scanner", "next", "()Ljava/lang/String;", false); //invoke scanner
             mainVisitor.visitVarInsn(Opcodes.ASTORE, varTable.get(var).index);
+        } else {
+            mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/util/Scanner", "nextInt", "()I", false); //invoke scanner
+            mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(var).index);
         }
     }
     
@@ -397,9 +403,16 @@ public class myListener extends KnightCodeBaseListener{
         // else print the string
         // STILL NEED TO CHECK IF THE VARIABLE IN THE TABLE IS A STRING OR NOT
         if(varTable.keySet().contains(output)){
-		    mainVisitor.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-            mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(output).index);
-		    mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream",  "println", "(I)V", false);
+            if(varTable.get(output).datatype.equals("INTEGER")){
+		        mainVisitor.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+                mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(output).index);
+		        mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream",  "println", "(I)V", false);
+            }
+            else if(varTable.get(output).datatype.equals("STRING")){
+		        mainVisitor.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+                mainVisitor.visitVarInsn(Opcodes.ALOAD, varTable.get(output).index);
+		        mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream",  "println", "(Ljava/lang/String;)V", false);
+            }
         } else {
             mainVisitor.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
             mainVisitor.visitLdcInsn(output.substring(1, output.length()-1)); //substring to remove the " "
