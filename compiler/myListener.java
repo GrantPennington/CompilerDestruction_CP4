@@ -123,17 +123,16 @@ public class myListener extends KnightCodeBaseListener{
         // checking to see if String v1 is a key in the Hashmap
         if(varTable.keySet().contains(v1)){
             mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(v1).index);
-            System.out.println(varTable.get(v1).value);
         } 
         else {
-            mainVisitor.visitVarInsn(Opcodes.BIPUSH, Integer.parseInt(v1));
+            mainVisitor.visitIntInsn(Opcodes.BIPUSH, Integer.parseInt(v1));
         }
         // checking to see if String v2 is a key in the Hashmap
         if(varTable.keySet().contains(v2)){
             mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(v2).index);
         }
         else {
-            mainVisitor.visitVarInsn(Opcodes.BIPUSH, Integer.parseInt(v2));
+            mainVisitor.visitIntInsn(Opcodes.BIPUSH, Integer.parseInt(v2));
         }
 
         mainVisitor.visitInsn(Opcodes.IADD);
@@ -160,21 +159,20 @@ public class myListener extends KnightCodeBaseListener{
         // checking to see if String v1 is a key in the Hashmap
         if(varTable.keySet().contains(v1)){
             mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(v1).index);
-            System.out.println(varTable.get(v1).value);
         } 
         else {
-            mainVisitor.visitVarInsn(Opcodes.BIPUSH, Integer.parseInt(v1));
+            mainVisitor.visitIntInsn(Opcodes.BIPUSH, Integer.parseInt(v1));
         }
         // checking to see if String v2 is a key in the Hashmap
         if(varTable.keySet().contains(v2)){
             mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(v2).index);
         }
         else {
-            mainVisitor.visitVarInsn(Opcodes.BIPUSH, Integer.parseInt(v2));
+            mainVisitor.visitIntInsn(Opcodes.BIPUSH, Integer.parseInt(v2));
         }
 
         mainVisitor.visitInsn(Opcodes.ISUB);
-        mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(current).index); // store the subtracted value into the address/index of the current HashMap key     
+        mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(current).index); // store the subtracted value into the address/index of the current HashMap key   
     }
 
     public void exitSubtraction(KnightCodeParser.SubtractionContext ctx){}
@@ -205,22 +203,21 @@ public class myListener extends KnightCodeBaseListener{
             System.out.println(varTable.get(v1).value);
         } 
         else {
-            mainVisitor.visitVarInsn(Opcodes.BIPUSH, Integer.parseInt(v1));
+            mainVisitor.visitIntInsn(Opcodes.BIPUSH, Integer.parseInt(v1));
         }
         // checking to see if String v2 is a key in the Hashmap
         if(varTable.keySet().contains(v2)){
             mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(v2).index);
         }
         else {
-            mainVisitor.visitVarInsn(Opcodes.BIPUSH, Integer.parseInt(v2));
+            mainVisitor.visitIntInsn(Opcodes.BIPUSH, Integer.parseInt(v2));
         }
 
         mainVisitor.visitInsn(Opcodes.IMUL);
         mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(current).index); // store the subtracted value into the address/index of the current HashMap key
     }
 
-    public void exitMultiplication(KnightCodeParser.MultiplicationContext ctx){
-    }
+    public void exitMultiplication(KnightCodeParser.MultiplicationContext ctx){}
 
     public void enterDivision(KnightCodeParser.DivisionContext ctx){
         System.out.println("ENTER Division");
@@ -243,22 +240,21 @@ public class myListener extends KnightCodeBaseListener{
             System.out.println(varTable.get(v1).value);
         } 
         else {
-            mainVisitor.visitVarInsn(Opcodes.BIPUSH, Integer.parseInt(v1));
+            mainVisitor.visitIntInsn(Opcodes.BIPUSH, Integer.parseInt(v1));
         }
         // checking to see if String v2 is a key in the Hashmap
         if(varTable.keySet().contains(v2)){
             mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(v2).index);
         }
         else {
-            mainVisitor.visitVarInsn(Opcodes.BIPUSH, Integer.parseInt(v2));
+            mainVisitor.visitIntInsn(Opcodes.BIPUSH, Integer.parseInt(v2));
         }
 
         mainVisitor.visitInsn(Opcodes.IDIV);
         mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(current).index); // store the subtracted value into the address/index of the current HashMap key        
     }
 
-    public void exitDivision(KnightCodeParser.DivisionContext ctx){
-    }
+    public void exitDivision(KnightCodeParser.DivisionContext ctx){}
 
     public void enterComp(KnightCodeParser.CompContext ctx) {
         System.out.println("COMP CONTEXT");
@@ -299,14 +295,16 @@ public class myListener extends KnightCodeBaseListener{
         // If either one is a key in the HashMap, then we get the value, parse the value to an Integer, then push it to the stack and store
         // it in the index
         if(varTable.keySet().contains(value)){
-            varTable.get(ident).setValue(varTable.get(value).value);
-            mainVisitor.visitVarInsn(Opcodes.BIPUSH, Integer.parseInt(varTable.get(ident).value));
-            mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(ident).index);
+            if(!varTable.get(ident).value.equals("")){
+                varTable.get(ident).setValue(varTable.get(value).value);
+                mainVisitor.visitIntInsn(Opcodes.BIPUSH, Integer.parseInt(varTable.get(ident).value));
+                mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(ident).index);
+            }
         }
         else {
             try{
                 varTable.get(ident).setValue(value);
-                mainVisitor.visitVarInsn(Opcodes.BIPUSH, Integer.parseInt(varTable.get(ident).value));
+                mainVisitor.visitIntInsn(Opcodes.BIPUSH, Integer.parseInt(varTable.get(ident).value));
                 mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(ident).index);
             } catch (Exception e) {
                 // This try catch block was the best solution I could come up with, I ran into errors when trying to parse to an integer
@@ -324,8 +322,6 @@ public class myListener extends KnightCodeBaseListener{
 
     public void enterRead(KnightCodeParser.ReadContext ctx){
         String var = ctx.getChild(1).getText();
-        System.out.println("READ CONTEXT: "+var);
-        varTable.get(var).setIndex(7);
         // Initialize the Scanner class
         mainVisitor.visitTypeInsn(Opcodes.NEW, "java/util/Scanner");
         mainVisitor.visitInsn(Opcodes.DUP);
@@ -335,88 +331,18 @@ public class myListener extends KnightCodeBaseListener{
         mainVisitor.visitVarInsn(Opcodes.ALOAD, 9); //load scanner
         mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/util/Scanner", "nextInt", "()I", false); //invoke scanner
         mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(var).index);
-        //System.out.println("X ADDRESS: "+varTable.get(var).address);
-        // ONLY WORKS FOR READING INTEGERS RIGHT NOW
-        // STILL NEED TO FIGURE OUT HOW TO GET STRINGS
     }
     
     public void exitRead(KnightCodeParser.ReadContext ctx){}
 
     public void enterLoop(KnightCodeParser.LoopContext ctx) {
-        System.out.println("ENTER THAT LOOOOP");
+        System.out.println("ENTER LOOP");
         System.out.println(ctx.getText());
-        String context = ctx.getText();
-
-        // get the comparison string
-        String comp = context.substring(context.indexOf('E')+1, context.indexOf('D'));
-        System.out.println(comp);
-        String compSymb = comp.substring(1,2);
-        String varValue = varTable.get(ctx.getChild(1).getText()).value;
-        int cond = Integer.parseInt(ctx.getChild(3).getText());
-        //int var = 0;
-        //var = Integer.parseInt(varValue);
-            System.out.println("VAR: "+varValue);
-            Label label0 = new Label();
-            mainVisitor.visitLabel(label0);
-            //mainVisitor.visitLineNumber(8, label0);
-            //mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(varValue).address);
-            //mainVisitor.visitIntInsn(Opcodes.BIPUSH, cond);
-            mainVisitor.visitInsn(Opcodes.ICONST_0);
-            mainVisitor.visitVarInsn(Opcodes.ISTORE, 1);
-            Label label1 = new Label();
-            mainVisitor.visitLabel(label1);
-            //mainVisitor.visitLineNumber(9, label1);
-            Label label2 = new Label();
-            mainVisitor.visitJumpInsn(Opcodes.GOTO, label2);
-            Label label3 = new Label();
-            mainVisitor.visitLabel(label3);
-            //mainVisitor.visitLineNumber(10, label3);
-            //mainVisitor.visitFrame(Opcodes.F_APPEND,1, new Object[] {Opcodes.INTEGER}, 0, null);
-            mainVisitor.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-            mainVisitor.visitVarInsn(Opcodes.ILOAD, 1);
-            mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(ctx.getChild(1).getText()).index);
-            mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println", "(I)V", false);
-            Label label4 = new Label();
-            mainVisitor.visitLabel(label4);
-            mainVisitor.visitLineNumber(11, label4);
-            mainVisitor.visitIincInsn(1, 1);
-            mainVisitor.visitLabel(label2);
-            mainVisitor.visitLineNumber(9, label2);
-            mainVisitor.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
-            mainVisitor.visitVarInsn(Opcodes.ILOAD, 1);
-            mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(ctx.getChild(1).getText()).index);
-            //mainVisitor.visitIntInsn(Opcodes.BIPUSH, var);
-            //mainVisitor.visitIntInsn(Opcodes.BIPUSH, var);
-            mainVisitor.visitInsn(Opcodes.ICONST_5);
-            mainVisitor.visitJumpInsn(Opcodes.IF_ICMPGT, label3);
-            Label label7 = new Label();
-            mainVisitor.visitLabel(label7);
-            mainVisitor.visitLineNumber(15, label7);
-            mainVisitor.visitInsn(Opcodes.RETURN);
-            //System.out.println(cond);
-            //int var = Integer.parseInt(varTable.get(varValue).value);
-            
-        /*
-        if(compSymb.equals("<")){
-            mainVisitor.visitJumpInsn(Opcodes.IF_ICMPLT, label3);
-        }
-        else if(compSymb.equals(">")){
-            mainVisitor.visitJumpInsn(Opcodes.IF_ICMPGT, label3);
-        }
-        else if(compSymb.equals(":=")){
-            mainVisitor.visitJumpInsn(Opcodes.IF_ICMPEQ, label3);
-        }
-        else if(compSymb.equals("<>")){
-            mainVisitor.visitJumpInsn(Opcodes.IF_ICMPNE, label3);
-        }
-        /*
-        Label label7 = new Label();
-        mainVisitor.visitLabel(label7);
-        //mainVisitor.visitInsn(Opcodes.RETURN);
-        */
     }
 
-    public void exitLoop(KnightCodeParser.LoopContext ctx) {}
+    public void exitLoop(KnightCodeParser.LoopContext ctx) {
+        System.out.println("EXIT LOOP");
+    }
 
     public void enterPrint(KnightCodeParser.PrintContext ctx){
         String output = ctx.getChild(1).getText();
