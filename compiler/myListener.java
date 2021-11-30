@@ -14,6 +14,8 @@ public class myListener extends KnightCodeBaseListener{
 	private MethodVisitor mainVisitor; //ASM MethodVisitor
 	private String programName; //name of the .class output file
     private int globalIndex = 0;
+    private Label startLabel;
+    private Label endLabel;
 
     HashMap<String, Variable> varTable = new HashMap<String, Variable>(); //hash map of type String and class Variable to store the declared variables
 
@@ -268,8 +270,9 @@ public class myListener extends KnightCodeBaseListener{
         System.out.println("VAR: "+ctx.getChild(0).getText());
         String varType = ctx.getChild(0).getText(); // string variable to hold varType
         String identifier = ctx.getChild(1).getText(); // string to hold the identifier
+        // add value to HashMap with key -> identifier, value -> new Variable object with params varType and globalIndex
         varTable.put(identifier, new Variable(varType, globalIndex));
-        globalIndex += 1;
+        globalIndex += 1; //increment global index 
 
         // print statements
         System.out.println("ID: "+identifier+" TYPE: "+varType);
@@ -329,19 +332,63 @@ public class myListener extends KnightCodeBaseListener{
         mainVisitor.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/util/Scanner", "<init>", "(Ljava/io/InputStream;)V", false);
         mainVisitor.visitVarInsn(Opcodes.ASTORE, 9); //store scanner
         mainVisitor.visitVarInsn(Opcodes.ALOAD, 9); //load scanner
-        mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/util/Scanner", "nextInt", "()I", false); //invoke scanner
-        mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(var).index);
+        try{
+            mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/util/Scanner", "nextInt", "()I", false); //invoke scanner
+            mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(var).index);
+        } catch (Exception e) {
+            mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/util/Scanner", "next", "()Ljava/lang/String;", false); //invoke scanner
+            mainVisitor.visitVarInsn(Opcodes.ASTORE, varTable.get(var).index);
+        }
     }
     
     public void exitRead(KnightCodeParser.ReadContext ctx){}
 
     public void enterLoop(KnightCodeParser.LoopContext ctx) {
         System.out.println("ENTER LOOP");
-        System.out.println(ctx.getText());
+        System.out.println("LOOP CONTEXT -> "+ctx.getText());
+        String op1 = ctx.getChild(1).getText();
+        String op2 = ctx.getChild(3).getText();
+
+        startLabel = new Label();
+        mainVisitor.visitLabel(startLabel);
+        if(varTable.keySet().contains(op1)){
+            mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(op1).index);
+        }
+        else {
+            mainVisitor.visitIntInsn(Opcodes.BIPUSH, Integer.parseInt(op1));
+        }
+        if(varTable.keySet().contains(op2)){
+            mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(op2).index);
+        }
+        else {
+            mainVisitor.visitIntInsn(Opcodes.BIPUSH, Integer.parseInt(op2));
+        }
     }
 
     public void exitLoop(KnightCodeParser.LoopContext ctx) {
         System.out.println("EXIT LOOP");
+        /*
+            The solution I found for the while loop
+            I load the the two variables from the conditional inside the enterLoop
+            When we get to the exit loop, I jump to the loopLabel which is at the start of the enterLoop method
+            This is not perfect, it also loops 1 too many times.
+            But after trying a bunch of different things with no success did not have time to keep trying
+            so imn sticking with this for now
+        */
+        String cond = ctx.getChild(2).getText(); // condition (i.e. >, <, :=, <>)
+        if(cond.equals(">")){
+            mainVisitor.visitJumpInsn(Opcodes.IF_ICMPGT, startLabel);
+        }
+        else if(cond.equals("<")){
+            mainVisitor.visitJumpInsn(Opcodes.IF_ICMPLT, startLabel);
+        }
+        else if(cond.equals(":=")){
+            mainVisitor.visitJumpInsn(Opcodes.IF_ICMPEQ, startLabel);
+        }
+        else if(cond.equals("<>")){
+            mainVisitor.visitJumpInsn(Opcodes.IF_ICMPNE, startLabel);
+        }
+        
     }
 
     public void enterPrint(KnightCodeParser.PrintContext ctx){
