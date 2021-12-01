@@ -1,5 +1,6 @@
 # KnightCode Compiler (kcc)
 Author: Grant Pennington
+\
 This is my final project for my Compiler Construction, CS322 Course.
 
 I built a simple compiler for a toy language called KnightCode 
