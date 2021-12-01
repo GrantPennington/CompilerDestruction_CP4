@@ -6,7 +6,6 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Label;
-import java.util.regex.*;
 import lexparse.*;
 
 public class myListener extends KnightCodeBaseListener{
@@ -15,7 +14,6 @@ public class myListener extends KnightCodeBaseListener{
 	private String programName; //name of the .class output file
     private int globalIndex = 0;
     private Label startLabel;
-    private Label endLabel;
 
     HashMap<String, Variable> varTable = new HashMap<String, Variable>(); //hash map of type String and class Variable to store the declared variables
 
@@ -258,25 +256,14 @@ public class myListener extends KnightCodeBaseListener{
 
     public void exitDivision(KnightCodeParser.DivisionContext ctx){}
 
-    public void enterComp(KnightCodeParser.CompContext ctx) {
-        System.out.println("COMP CONTEXT");
-        System.out.println(ctx.getText());
-    }
-
-    public void exitComp(KnightCodeParser.CompContext ctx) {}
-
     public void enterVariable(KnightCodeParser.VariableContext ctx) { 
         System.out.println("Enter variable rule");
-        System.out.println("VAR: "+ctx.getChild(0).getText());
+
         String varType = ctx.getChild(0).getText(); // string variable to hold varType
         String identifier = ctx.getChild(1).getText(); // string to hold the identifier
         // add value to HashMap with key -> identifier, value -> new Variable object with params varType and globalIndex
         varTable.put(identifier, new Variable(varType, globalIndex));
         globalIndex += 1; //increment global index 
-
-        // print statements
-        System.out.println("ID: "+identifier+" TYPE: "+varType);
-        System.out.println(varTable.get(identifier).toString());
     }
 	
 	public void exitVariable(KnightCodeParser.VariableContext ctx) { 
@@ -316,10 +303,11 @@ public class myListener extends KnightCodeBaseListener{
                 mainVisitor.visitIntInsn(Opcodes.BIPUSH, Integer.parseInt(varTable.get(ident).value));
                 mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(ident).index);
             } catch (Exception e) {
-                // This try catch block was the best solution I could come up with, I ran into errors when trying to parse to an integer
-                // if the setVar value was something like x-10
-                // So, I just return nothing if there is an error caught
-                // and the listener will continue on to the operation rule (i.e. addition)
+                /* 
+                    This try catch block was the best solution I could come up with, I ran into errors when trying to parse to an integer
+                    if the setVar value was something like x-10
+                    So, I just return nothing if there is an error caught
+                */
                 return ;
             }
         }
@@ -338,10 +326,13 @@ public class myListener extends KnightCodeBaseListener{
         mainVisitor.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/util/Scanner", "<init>", "(Ljava/io/InputStream;)V", false);
         mainVisitor.visitVarInsn(Opcodes.ASTORE, 9); //store scanner
         mainVisitor.visitVarInsn(Opcodes.ALOAD, 9); //load scanner
+        // if the variable in the Hashmap has type STRING
         if(varTable.get(var).datatype.equals("STRING")){
             mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/util/Scanner", "next", "()Ljava/lang/String;", false); //invoke scanner
             mainVisitor.visitVarInsn(Opcodes.ASTORE, varTable.get(var).index);
-        } else {
+        }
+        // if the variable in the Hashmap has type Integer
+        else {
             mainVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/util/Scanner", "nextInt", "()I", false); //invoke scanner
             mainVisitor.visitVarInsn(Opcodes.ISTORE, varTable.get(var).index);
         }
@@ -349,14 +340,52 @@ public class myListener extends KnightCodeBaseListener{
     
     public void exitRead(KnightCodeParser.ReadContext ctx){}
 
+    public void enterDecision(KnightCodeParser.DecisionContext ctx){
+        System.out.println("ENTER DECISION");
+        // Didnt get the if statements working
+        // honestly wasn't sure how to do it
+        String op1 = ctx.getChild(1).getText(); // first variable
+        String op2 = ctx.getChild(3).getText(); // second variable
+        System.out.println(op1+", "+op2);
+        Label label0 = new Label();
+        mainVisitor.visitLabel(label0);
+        if(varTable.keySet().contains(op1)){
+            mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(op1).index);
+        }
+        else {
+            mainVisitor.visitIntInsn(Opcodes.BIPUSH, Integer.parseInt(op1));
+        }
+        Label label1 = new Label();
+        mainVisitor.visitLabel(label1);
+        if(varTable.keySet().contains(op2)){
+            mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(op2).index);
+        }
+        else {
+            mainVisitor.visitIntInsn(Opcodes.BIPUSH, Integer.parseInt(op2));
+        }
+        Label label3 = new Label();
+        mainVisitor.visitJumpInsn(Opcodes.IF_ICMPGT, label0);
+    }
+
+    public void exitDecision(KnightCodeParser.DecisionContext ctx){
+        System.out.println("EXIT DECISION");
+    }
+
     public void enterLoop(KnightCodeParser.LoopContext ctx) {
         System.out.println("ENTER LOOP");
-        System.out.println("LOOP CONTEXT -> "+ctx.getText());
-        String op1 = ctx.getChild(1).getText();
-        String op2 = ctx.getChild(3).getText();
 
+        // startLabel for loop to jump to
         startLabel = new Label();
         mainVisitor.visitLabel(startLabel);
+        
+    }
+
+    public void exitLoop(KnightCodeParser.LoopContext ctx) {
+        System.out.println("EXIT LOOP");
+        // checking the condition in the exitLoop is the only way I could get it to work
+        // I have startLabel declared at the top
+        String op1 = ctx.getChild(1).getText(); // first variable
+        String op2 = ctx.getChild(3).getText(); // second variable
         if(varTable.keySet().contains(op1)){
             mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(op1).index);
         }
@@ -369,18 +398,6 @@ public class myListener extends KnightCodeBaseListener{
         else {
             mainVisitor.visitIntInsn(Opcodes.BIPUSH, Integer.parseInt(op2));
         }
-    }
-
-    public void exitLoop(KnightCodeParser.LoopContext ctx) {
-        System.out.println("EXIT LOOP");
-        /*
-            The solution I found for the while loop
-            I load the the two variables from the conditional inside the enterLoop
-            When we get to the exit loop, I jump to the loopLabel which is at the start of the enterLoop method
-            This is not perfect, it also loops 1 too many times.
-            But after trying a bunch of different things with no success did not have time to keep trying
-            so imn sticking with this for now
-        */
         String cond = ctx.getChild(2).getText(); // condition (i.e. >, <, :=, <>)
         if(cond.equals(">")){
             mainVisitor.visitJumpInsn(Opcodes.IF_ICMPGT, startLabel);
@@ -394,15 +411,16 @@ public class myListener extends KnightCodeBaseListener{
         else if(cond.equals("<>")){
             mainVisitor.visitJumpInsn(Opcodes.IF_ICMPNE, startLabel);
         }
-        
     }
 
     public void enterPrint(KnightCodeParser.PrintContext ctx){
         String output = ctx.getChild(1).getText();
-        // if the printcontext is a key in the varTable, print a integer value
-        // else print the string
-        // STILL NEED TO CHECK IF THE VARIABLE IN THE TABLE IS A STRING OR NOT
+        // if the printcontext is a key in the varTable, get the value and print it
         if(varTable.keySet().contains(output)){
+            /*
+                Checks if the datatype of the value in the Hashmap is an INTEGER or a STRING, because that matters for declaring the System.out.println
+                If it is not a key in the Hashmap, then just print out whatever it was
+            */
             if(varTable.get(output).datatype.equals("INTEGER")){
 		        mainVisitor.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
                 mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(output).index);
