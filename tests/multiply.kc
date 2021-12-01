@@ -1,0 +1,16 @@
+PROGRAM Multiply
+
+DECLARE
+	INTEGER a
+	INTEGER b
+	INTEGER z
+
+BEGIN
+
+SET a := 2
+SET b := 2
+SET z := a * b
+
+PRINT z
+
+END

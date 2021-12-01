@@ -1,3 +1,13 @@
+/**
+* This is the myListener class. Handles each node as it walks through the parse tree
+* @author Grant Pennington
+* @version 1.0
+* Programming Project four
+* CS322 - Compiler Construction
+* Fall 2021
+**/
+
+
 package compiler;
 
 import java.util.HashMap;
@@ -82,11 +92,6 @@ public class myListener extends KnightCodeBaseListener{
 	public void exitDeclare(KnightCodeParser.DeclareContext ctx){
 
 		System.out.println("Leaving Declare rule. . .");
-        // for loop to view the contents of the HashMap (for testing purposes)
-        for(String key : varTable.keySet()){ 
-            System.out.println("KEY: "+key+" VALUE: "+varTable.get(key).toString()); 
-        }
-
 	}
 
     public void enterBody(KnightCodeParser.BodyContext ctx){
@@ -98,11 +103,6 @@ public class myListener extends KnightCodeBaseListener{
 	public void exitBody(KnightCodeParser.BodyContext ctx){
 
 		System.out.println("Leaving body. . .");
-        // for loop to view the contents of the HashMap (for testing purposes)
-        for(String key : varTable.keySet()){ 
-            System.out.println("KEY: "+key+" VALUE: "+varTable.get(key).toString()); 
-        }
-
 	}
 
     public void enterAddition(KnightCodeParser.AdditionContext ctx){
@@ -200,7 +200,6 @@ public class myListener extends KnightCodeBaseListener{
         // checking to see if String v1 is a key in the Hashmap
         if(varTable.keySet().contains(v1)){
             mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(v1).index);
-            System.out.println(varTable.get(v1).value);
         } 
         else {
             mainVisitor.visitIntInsn(Opcodes.BIPUSH, Integer.parseInt(v1));
@@ -237,7 +236,6 @@ public class myListener extends KnightCodeBaseListener{
         // checking to see if String v1 is a key in the Hashmap
         if(varTable.keySet().contains(v1)){
             mainVisitor.visitVarInsn(Opcodes.ILOAD, varTable.get(v1).index);
-            System.out.println(varTable.get(v1).value);
         } 
         else {
             mainVisitor.visitIntInsn(Opcodes.BIPUSH, Integer.parseInt(v1));
@@ -278,7 +276,6 @@ public class myListener extends KnightCodeBaseListener{
         // ctx.getChild(0) -> "SET", ctx.getChild(2) -> ":="
         String ident = ctx.getChild(1).getText();
         String value = ctx.getChild(3).getText();
-        System.out.println(ctx.getChild(3).getText());
 
         // if statement for setting a String variable
         if(varTable.get(ident).datatype.equals("STRING")){
@@ -346,7 +343,7 @@ public class myListener extends KnightCodeBaseListener{
         // honestly wasn't sure how to do it
         String op1 = ctx.getChild(1).getText(); // first variable
         String op2 = ctx.getChild(3).getText(); // second variable
-        System.out.println(op1+", "+op2);
+
         Label label0 = new Label();
         mainVisitor.visitLabel(label0);
         if(varTable.keySet().contains(op1)){

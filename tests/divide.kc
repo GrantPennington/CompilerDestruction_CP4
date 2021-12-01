@@ -1,0 +1,16 @@
+PROGRAM Divide
+
+DECLARE
+	INTEGER d
+	INTEGER y
+	INTEGER z
+
+BEGIN
+
+SET d := 26
+SET y := 5
+SET z := d / y
+
+PRINT z
+
+END

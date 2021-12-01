@@ -1,3 +1,12 @@
+/**
+* This is the Variable class. I use the variable class to store the datatype, value, and index of each declared variable
+* @author Grant Pennington
+* @version 1.0
+* Programming Project four
+* CS322 - Compiler Construction
+* Fall 2021
+**/
+
 package compiler;
 
 public class Variable{

@@ -1,0 +1,9 @@
+PROGRAM HelloWorld
+
+DECLARE
+    STRING label
+
+BEGIN
+    SET label := "Hello World"
+    PRINT label
+END
