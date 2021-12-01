@@ -1,4 +1,4 @@
-# CompilerDestruction_CP4
+# KnightCode Compiler (kcc)
 Author: Grant Pennington
 This is my final project for my Compiler Construction, CS322 Course.
 
